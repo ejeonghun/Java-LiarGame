@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" native2AsciiForPropertiesFiles="true" defaultCharsetForPropertiesFiles="x-windows-949">
+    <file url="file://$PROJECT_DIR$/.idea/.gitignore" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/.idea/misc.xml" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/.idea/modules.xml" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/Client.java" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/ClientUi.java" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/LiarServer.java" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/LoginUi.java" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/Result.java" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/ServerUi.java" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/a.java" charset="x-windows-949" />
+    <file url="PROJECT" charset="x-windows-949" />
+  </component>
+</project>
