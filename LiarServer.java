@@ -258,6 +258,7 @@ class OneClientModul extends Thread {
             broadcast("먼저 로그인을 해주세요");
             while (true) {
                 msg = dis.readUTF();
+                System.out.println(msg);
                 if (msg.startsWith("login:")) {
                     System.out.println(msg);
                     String[] parts = msg.split(":");
@@ -298,8 +299,15 @@ class OneClientModul extends Thread {
                 } else if (msg.equals("enterfalse")) {
                 } else if (msg.startsWith("ranking")) { // 랭킹 요청
                     broadcast(getRankings());
+                }  else if (msg.equals("audio:")) {
+                    System.out.println("오디오 데이터 수신");
+                    // 오디오 데이터 읽기
+                    int length = dis.readInt(); // 오디오 데이터의 길이 읽기
+                    byte[] audioData = new byte[length];
+                    dis.readFully(audioData); // 오디오 데이터 읽기
+                    System.out.println("오디오 데이터 읽기 끝");
+                    broadcastAudio(audioData, length); // 읽은 오디오 데이터를 모든 클라이언트에게 브로드캐스팅
                 }
-
                 else {
                     broadcast(msg);
                 }
@@ -578,7 +586,21 @@ class OneClientModul extends Thread {
         return rankings;
     }
 
-
+    // 음성 데이터 브로드캐스팅
+    void broadcastAudio(byte[] audioData, int length) {
+        System.out.println("오디오 데이터 브로드캐스팅 시작");
+        for (OneClientModul ocm : ls.v) { // 모든 클라이언트에 대해
+            try {
+                ocm.dos.writeUTF("audio:"); // "audio:" 헤더 전송
+                ocm.dos.writeInt(length); // 오디오 데이터의 길이 전송
+                ocm.dos.write(audioData, 0, length); // 오디오 데이터 전송
+                ocm.dos.flush();
+                System.out.println("보이스 전송 완료");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     void closeAll() {
         try {

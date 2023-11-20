@@ -1,8 +1,10 @@
+import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.io.*;
 import java.lang.*;
@@ -280,24 +282,49 @@ class Client extends Thread implements Runnable, ActionListener {
         }
     }
 
-    String listen() { // 랭킹 부분때문에 수정함
-        lsnMsg = "";
+    String listen() {
         try {
-            lsnMsg = dis.readUTF();
-            System.out.println(lsnMsg);
+            while (true) {
+                String header = dis.readUTF();
 
-            if (lsnMsg.startsWith("rankings:")) {
-                showRankings(lsnMsg.substring(9));
-                return null;
-            } else {
-                return protocol();
+                if (header.startsWith("audio:")) {
+                    int length = dis.readInt();
+                    byte[] audioData = new byte[length];
+                    dis.readFully(audioData);
+
+                    // 받은 오디오 데이터를 처리하는 코드
+                    AudioFormat format = new AudioFormat(8000.0f, 16, 1, true, true); // 샘플링 레이트 8000Hz, 샘플 크기 16비트, 모노, signed PCM, big endian
+                    AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(audioData), format, audioData.length / format.getFrameSize());
+
+                    DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
+                    SourceDataLine line = (SourceDataLine) AudioSystem.getLine(info);
+                    line.open(format);
+                    line.start();
+                    byte[] buffer = new byte[4096]; // 버퍼
+                    int bytesRead;
+                    while ((bytesRead = ais.read(buffer)) != -1) {
+                        line.write(buffer, 0, bytesRead);
+                    }
+                    line.drain();
+                    line.close();
+
+                    System.out.println("성공적으로 데이터를 받음");
+                } else if (header.startsWith("rankings:")) {
+                    showRankings(header.substring(9));
+                    return null;
+                } else {
+                    lsnMsg = header;  // 추가된 코드
+                    return protocol();
+                }
             }
-        } catch (IOException ie) {
-            System.out.println(ie);
+        } catch (IOException | LineUnavailableException e) {
+            e.printStackTrace();
             JOptionPane.showMessageDialog(null, "서버와 연결이 끊겼습니다.");
             return "exit";
         }
     }
+
+
 
     void showRankings(String rankings) {
         JTextArea textArea = new JTextArea(rankings);
@@ -374,4 +401,49 @@ class Client extends Thread implements Runnable, ActionListener {
             e.printStackTrace();
         }
     }
+
+
+    public byte[] captureAudio() {
+        try {
+            AudioFormat format = new AudioFormat(8000.0f, 16, 1, true, true);
+            DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+            TargetDataLine microphone = (TargetDataLine) AudioSystem.getLine(info);
+            microphone.open(format);
+            microphone.start();
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[microphone.getBufferSize() / 5];
+            int bytesRead = 0;
+
+            long endTimeMillis = System.currentTimeMillis() + 5000; // 5초 후의 시간
+            while (System.currentTimeMillis() < endTimeMillis) {
+                bytesRead = microphone.read(buffer, 0, buffer.length);
+                out.write(buffer, 0, bytesRead);
+            }
+            microphone.close();
+            System.out.println("오디오 캡쳐 완료"); // 디버깅 코드
+            return out.toByteArray();
+        } catch (LineUnavailableException e) {
+            e.printStackTrace();
+        }
+        return new byte[0];
+    }
+
+    void sendAudio(byte[] audioData) {
+        try {
+            // "audio:" 헤더 전송
+            dos.writeUTF("audio:");
+
+            // 오디오 데이터의 길이와 실제 데이터 전송
+            dos.writeInt(audioData.length);
+            dos.write(audioData);
+            System.out.println("전송 완료");
+            dos.flush();
+        } catch (IOException ie) {
+            System.out.println("sendAudio() ie: " + ie);
+        }
+    }
+
+
+
 }

@@ -109,7 +109,7 @@ class ClientUi extends JFrame {
         cp.add(northP, BorderLayout.NORTH);                                      //northP
 
         chatP = new ImagePanel("pBack.png");
-        chatTf = new JTextField(26);
+        chatTf = new JTextField(20);
         chatTf.setFont(f2);
         chatTf.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         chatP.add(chatTf);
@@ -121,6 +121,17 @@ class ClientUi extends JFrame {
         JButton loginBtn = new JButton("로그인");
         JButton signUpBtn = new JButton("회원가입");
         JButton rankingBtn = new JButton("랭킹");
+        JButton recordBtn = new JButton("음성 녹음");
+
+        // 음성 녹음 버튼
+        recordBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                byte[] audioData = client.captureAudio(); // 녹음된 오디오 데이터
+                client.sendAudio(audioData); // 녹음된 오디오 데이터를 서버에 전송
+            }
+        });
+
 
         loginBtn.addActionListener(new ActionListener() {
             @Override
@@ -160,7 +171,7 @@ class ClientUi extends JFrame {
         chatP.add(loginBtn);
         chatP.add(signUpBtn);
         chatP.add(rankingBtn);
-
+        chatP.add(recordBtn); // 채팅 패널에 "음성 녹음" 버튼 추가
 
 
         p1 = new JPanel(new BorderLayout());
